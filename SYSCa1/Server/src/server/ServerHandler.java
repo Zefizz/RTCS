@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 public class ServerHandler {
 	private DatagramSocket dsock;
@@ -28,9 +29,9 @@ public class ServerHandler {
 	}
 	
 	private void printData(DatagramPacket pack) {
-		System.out.println("got packet from " + pack.getAddress() +
-							":" + pack.getPort());
-		System.out.println("data:\t" + pack.getData() + "\n");
+		String data = new String(pack.getData(),0,pack.getLength());
+		System.out.println("got packet from " + pack.getAddress() + ":" + pack.getPort());
+		System.out.println("data:\t" + Arrays.toString(data.getBytes()) + "\n");
 	}
 	
 	/**

@@ -4,6 +4,7 @@ import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.io.IOException;
 
 public class PacketHandler {
@@ -32,6 +33,12 @@ public class PacketHandler {
 		}
 	}
 
+	private void printData(DatagramPacket pack) {
+		String data = new String(pack.getData(),0,pack.getLength());
+		System.out.println("got packet from " + pack.getAddress() + ":" + pack.getPort());
+		System.out.println("data:\t" + Arrays.toString(data.getBytes()) + "\n");
+	}
+
 	/**
 	 * receive a datagram packet and display the contained data
 	 */
@@ -48,8 +55,7 @@ public class PacketHandler {
 			System.exit(1);
 		}
 		
-		System.out.println("received packet from:\t" + pack.getAddress() + ":" + pack.getPort());
-		System.out.println("data:\t" + pack.getData());	
+		printData(pack);	
 	}
 
 	/**
