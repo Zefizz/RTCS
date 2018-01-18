@@ -78,6 +78,10 @@ public class PacketHandler {
 				receivePacket();
 			}
 			//send invalid request here kthnks
+			sendPacket = new ReadPacket("asdf.dat","1234");
+			sendPacket.invalidate();
+			dsock.send(sendPacket.createDatagram(InetAddress.getLocalHost(),sendPort));
+			
 		} catch (IOException e) {
 		}
 		dsock.close();

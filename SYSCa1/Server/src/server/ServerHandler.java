@@ -59,36 +59,32 @@ public class ServerHandler {
 	 * @param data the byte[] containing the data to be verified
 	 * @return if the data matches specification
 	 */
-	protected boolean validatePacketData(byte[] data) {
+	protected boolean validatePacketData(byte[] data, int dataLength) {
 
 		//verify the first two bytes are 0, followed by 1 or 2
 		//data must have at least 6 bytes 0,x,x,0,x,0
-		if (data.length < 6 || data[0] != 0 || (data[1] != 1 && data[1] != 2)) {
+		if (dataLength < 6 || data[0] != 0 || (data[1] != 1 && data[1] != 2)) {
 			return false;
 		}
 		
 		//read the filename until the next 0
 		int i = 2;
-		while (i < data.length && data[i] != 0) {
+		while (i < dataLength && data[i] != 0) {
 			i++;
 		}
 		//invalid if there was no text to read / end of array (no 0)
-		if (i == 2 || i == data.length) return false;
+		if (i == 2 || i == dataLength) return false;
 		
 		//read the mode text until the next 0
 		int j = i + 1;
-		while (j < data.length && data[j] != 0) {
+		while (j < dataLength && data[j] != 0) {
 			j++;
 		}
 		//invalid if there was no text to read / end of array (no 0)
-		if (j == i+1 || j == data.length) return false;
+		if (j == i+1 || j == dataLength) return false;
+		
+		System.out.println(j);
 
-		//there should be no more data after the last read
-		//the rest of the buffer should contain 0's
-		while (j < data.length) {
-			if (data[j++] != 0)
-				return false;
-		}
 		return true;
 	}
 	
@@ -101,7 +97,7 @@ public class ServerHandler {
 	 */
 	public DatagramPacket handleIncomingPacket(DatagramPacket pack) throws Exception {
 		byte[] data = {};
-		if (validatePacketData(pack.getData())) {
+		if (validatePacketData(pack.getData(),pack.getLength())) {
 			if (pack.getData()[1] == 1)
 				data = new byte[] {0,3,0,1};
 			else if (pack.getData()[1] == 2)

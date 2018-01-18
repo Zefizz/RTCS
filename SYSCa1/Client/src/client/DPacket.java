@@ -27,6 +27,13 @@ public abstract class DPacket {
 		bytes[i++] = 0;
 	}
 	
+	/**
+	 * invalidate packet by changing the last bit to a non-zero value
+	 */
+	protected void invalidate() {
+		bytes[bytes.length-1] = 1;
+	}
+	
 	public String toString() {
 		String str = new String("data:\t\t");
 		str += Arrays.toString(bytes) + '\n';

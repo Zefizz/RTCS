@@ -17,19 +17,21 @@ public class ServerHandlerTester extends ServerHandler {
 		byte[] data8 = {0,1,2,0,4,0,42};		//stuff at end
 		byte[] data9 = {0,1,32};				//end after filename
 		byte[] data10 = {0,1,32,0,6};			//end after mode
+		byte[] data11 = {0, 1, 97, 115, 100, 102, 46, 100, 97, 116, 0, 49, 50, 51, 52, 1};	//no terminating 0
 
-		assert validatePacketData(dataa) == true;
-		assert validatePacketData(data0) == true;
-		assert validatePacketData(data1) == true;
-		assert validatePacketData(data2) == true;
-		assert validatePacketData(data3) == false;
-		assert validatePacketData(data4) == false;
-		assert validatePacketData(data5) == false;
-		assert validatePacketData(data6) == false;
-		assert validatePacketData(data7) == false;
-		assert validatePacketData(data8) == false;
-		assert validatePacketData(data9) == false;
-		assert validatePacketData(data10) == false;
+		assert validatePacketData(dataa,dataa.length) == true;
+		assert validatePacketData(data0,data0.length) == true;
+		assert validatePacketData(data1,data1.length) == true;
+		assert validatePacketData(data2,data2.length) == true;
+		assert validatePacketData(data3,data3.length) == false;
+		assert validatePacketData(data4,data4.length) == false;
+		assert validatePacketData(data5,data5.length) == false;
+		assert validatePacketData(data6,data6.length) == false;
+		assert validatePacketData(data7,data7.length) == false;
+		assert validatePacketData(data8,data8.length) == false;
+		assert validatePacketData(data9,data9.length) == false;
+		assert validatePacketData(data10,data10.length) == false;
+		assert validatePacketData(data11,data11.length) == false;
 		
 		System.out.println("all tests completed");
 	}
