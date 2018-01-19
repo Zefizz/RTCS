@@ -35,10 +35,10 @@ public abstract class DPacket {
 	}
 	
 	public String toString() {
-		String str = new String("data:\t\t");
+		String str = new String("Created new packet\ndata:\t\t");
 		str += Arrays.toString(bytes) + '\n';
 		str += "filename:\t" + filename + '\n';
-		str += "mode:\t\t" + mode;
+		str += "mode:\t\t" + mode + "\n";
 		return str;
 	}
 	

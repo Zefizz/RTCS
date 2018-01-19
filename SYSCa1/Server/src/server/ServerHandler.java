@@ -3,9 +3,7 @@ package server;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 
 public class ServerHandler {
@@ -14,6 +12,8 @@ public class ServerHandler {
 	
 	public ServerHandler() {
 		createSocket();
+		System.out.println("server listening on port " + dsock.getLocalPort() +
+							"\n++++++++++++++++++++++++++++++++++++++++++++++\n");
 	}
 	/**
 	 * initialize the sockets. Exit program on failure to initialize
@@ -28,18 +28,26 @@ public class ServerHandler {
 		}
 	}
 	
+	/**
+	 * print data about a datagram packet. Data includes sender address and port,
+	 * and the contents of the packet viewed as an array
+	 * @param pack the datagram packet to view
+	 */
 	private void printData(DatagramPacket pack) {
 		String data = new String(pack.getData(),0,pack.getLength());
 		System.out.println("got packet from " + pack.getAddress() + ":" + pack.getPort());
+		System.out.println("containing " + pack.getLength() + " bytes of data");
 		System.out.println("data:\t" + Arrays.toString(data.getBytes()) + "\n");
 	}
 	
 	/**
-	 * receive a datagram packet and display the contained data
+	 * listen on the socket to receive a datagram packet
+	 * and display the contained data
 	 * @return the packet received
 	 */
 	private DatagramPacket receivePacket() {
-		int length = 128;
+		//initialize the buffer
+		int length = 127;
 		byte[] buffer = new byte[length];
 		DatagramPacket pack = new DatagramPacket(buffer, length);
 		
@@ -50,6 +58,8 @@ public class ServerHandler {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		
+		//display the packet info and return the packet
 		printData(pack);
 		return pack;
 	}
@@ -57,7 +67,10 @@ public class ServerHandler {
 	/**
 	 * verify that the data matched the specification
 	 * @param data the byte[] containing the data to be verified
-	 * @return if the data matches specification
+	 * 		  this byte[] may include trailing 0's from the buffer
+	 * @param dataLength the length of the message. This is <= the length of byte[]
+	 * 		  not including trailing 0's from the buffer
+	 * @return true/false if the data matches specification
 	 */
 	protected boolean validatePacketData(byte[] data, int dataLength) {
 
@@ -82,9 +95,8 @@ public class ServerHandler {
 		}
 		//invalid if there was no text to read / end of array (no 0)
 		if (j == i+1 || j == dataLength) return false;
-		
-		System.out.println(j);
 
+		//read to end of the message with no specification violations
 		return true;
 	}
 	
@@ -92,20 +104,29 @@ public class ServerHandler {
 	 * validate the data and return the response
 	 * in the form of a datagram packet
 	 * @param pack the received datagram
-	 * @return the response data to be sent
+	 * @return the response datagram packet to be sent
 	 * @throws Exception if the packet is invalid
 	 */
 	public DatagramPacket handleIncomingPacket(DatagramPacket pack) throws Exception {
 		byte[] data = {};
+		
+		//check that the packet is valid. If so, set data to be the appropriate response
 		if (validatePacketData(pack.getData(),pack.getLength())) {
-			if (pack.getData()[1] == 1)
+			
+			//response to send if the packet is a read request
+			if (pack.getData()[1] == 1) {
 				data = new byte[] {0,3,0,1};
-			else if (pack.getData()[1] == 2)
+			//response to send if the packet is a write request
+			} else if (pack.getData()[1] == 2) {
 				data = new byte[] {0,4,0,0};
+			}
+			
 		} else {
+			//the packet was invalid. the server throws an exception and quits
 			throw new Exception("invalid packet");
 		}
-
+		
+		//return a new datagram packet addressed to the sender, containing the response
 		return new DatagramPacket(data,data.length,pack.getAddress(),pack.getPort());
 	}
 	
@@ -119,10 +140,18 @@ public class ServerHandler {
 		try {
 			response = handleIncomingPacket(pack);
 		} catch (Exception e) {
+			//quit if an exception was thrown ie packet was invalid
 			System.out.println(e);
+			e.printStackTrace();
 			System.exit(1);
 		}
-
+		
+		//print out the information about the new packet
+		System.out.println("created datagram packet to: "
+							+ response.getAddress() + ":" + response.getPort());
+		System.out.println("containing " + response.getLength() + " bytes of data");;
+		System.out.println("data:\t" + Arrays.toString(response.getData()) + "\n");
+		
 		//create new socket to send back the response
 		DatagramSocket replySock = null;
 		try {
@@ -139,6 +168,9 @@ public class ServerHandler {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		
+		//close the send socket created for this request
+		replySock.close();
 	}
 	
 	public void run() {

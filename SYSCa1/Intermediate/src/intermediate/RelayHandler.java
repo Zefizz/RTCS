@@ -9,21 +9,29 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 
 public class RelayHandler {
-	private DatagramSocket dsock;
+	private DatagramSocket recvSock;
+	private DatagramSocket sendRecvSock;
 	private final int recvPort = 8447;
 	private final int serverPort = 8889;
 	
 	public RelayHandler() {
-		createSocket();
+		//the sockets are opened during construction
+		createSockets();
+		System.out.println("relay listening on port " + recvPort +
+							" and " + sendRecvSock.getLocalPort() +
+							"\n++++++++++++++++++++++++++++++++++++++++++++++\n");
 	}
 	
 	/**
-	 * initialize the socket on the receiving port. Exit program on failure to initialize
+	 * initialize the sockets to send and send/receive
+	 * Exit program on failure to initialize
 	 */
-	private void createSocket() {
+	private void createSockets() {
 		try {
-			//create socket on the port for reading/writing
-			dsock = new DatagramSocket(recvPort);
+			//create socket on the port for receiving
+			//and the send/receive socket on an unspecified port
+			recvSock = new DatagramSocket(recvPort);
+			sendRecvSock = new DatagramSocket();
 		} catch (SocketException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -31,81 +39,106 @@ public class RelayHandler {
 	}
 	
 	/**
-	 * display the contents of an incoming packet, and information about the sender
-	 * @param pack the datagram packet to print
+	 * print data about a datagram packet. Data includes sender address and port,
+	 * and the contents of the packet viewed as an array
+	 * @param pack the datagram packet to view
 	 */
 	private void printData(DatagramPacket pack) {
 		String data = new String(pack.getData(),0,pack.getLength());
 		System.out.println("got packet from " + pack.getAddress() + ":" + pack.getPort());
+		System.out.println("containing " + pack.getLength() + " bytes of data");;
 		System.out.println("data:\t" + Arrays.toString(data.getBytes()) + "\n");
 	}
 	
 	/**
-	 * receive a datagram packet and display the contained data
+	 * listen on the receive socket to receive a datagram packet
+	 * and display the contained data
+	 * @param sock the socket used to receive the packet
 	 * @return the packet received
 	 */
-	private DatagramPacket receivePacket() {
-		int length = 128;
+	private DatagramPacket receivePacket(DatagramSocket sock) {
+		//initialize the buffer
+		int length = 127;
 		byte[] buffer = new byte[length];
 		DatagramPacket pack = new DatagramPacket(buffer, length);
 		
 		try {
-			//listen on the socket for incoming datagram
-			dsock.receive(pack);
+			//listen on the receive socket for incoming datagram
+			sock.receive(pack);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		
+		//display the packet info and return the packet
 		printData(pack);
 		return pack;
 	}
-	
+
 	/**
 	 * copy a datagram packet to be sent to the specified port 
 	 * @param pack the packet to be rerouted
 	 * @param port the new destination port
-	 * @return DatagramPacket to be sent to the new port
+	 * @return DatagramPacket to be sent
 	 */
 	private DatagramPacket createRedirectPacket(DatagramPacket pack,int port) {
 		DatagramPacket relayPacket = null;
 		
 		//copy the data into a new byte array with the same size
 		//as the received data, without the extra buffer
-		String data = new String(pack.getData(),0,pack.getLength());
-		byte[] bytes = data.getBytes();
+		byte[] noBufferData = Arrays.copyOf(pack.getData(),pack.getLength());
 		
 		try {
 			//new packet copies the data of pack, changes the port
 			relayPacket = new DatagramPacket(
-					bytes,bytes.length,
+					noBufferData,noBufferData.length,
 					InetAddress.getLocalHost(),port);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		
+		//print out the information about the new packet
+		System.out.println("created datagram packet to: "
+							+ relayPacket.getAddress() + ":" + relayPacket.getPort());
+		System.out.println("containing " + relayPacket.getLength() + " bytes of data");;
+		System.out.println("data:\t" + Arrays.toString(relayPacket.getData()) + "\n");
+
 		return relayPacket;
+		
 	}
 	
-	//relay the packet to the server
+	/**
+	 * relay the packet to the server, and then wait for a response
+	 * from the server to send back to the client
+	 * inter -> server and inter -> client handled here
+	 * @param pack the datagram packet to be relayed
+	 */
 	private void relayPacket(DatagramPacket pack) {
+		//remember which port the client is running on
 		int sourcePort = pack.getPort();
 		
-		//send the packet to the server by copying the data, and changing the target port to be the server port
+		//send the packet to the server by copying the data,
+		//and changing the port to be that of the server. Print the resulting packet info
 		DatagramPacket packToServer = createRedirectPacket(pack,serverPort);
 		try {
-			dsock.send(packToServer);
+			//send the packet to the server on the send/receive socket
+			sendRecvSock.send(packToServer);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 		
 		//wait on the socket to receive a response from the server
-		DatagramPacket packFromServer = receivePacket();
+		DatagramPacket packFromServer = receivePacket(sendRecvSock);
 		
-		//similarly, copy the data into a new DatagramPacket addressed to the original sender
+		//similarly, copy the data into a new DatagramPacket addressed to the original client
+		//the packet is printed before being sent
 		DatagramPacket response = createRedirectPacket(packFromServer,sourcePort);
+		
 		try {
-			dsock.send(response);
+			//send the data from the server back to the client on the send/receive socket
+			sendRecvSock.send(response);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -120,9 +153,9 @@ public class RelayHandler {
 		DatagramPacket received;
 		//repeat *forever*
 		while (true) {
-			//listen for a packet
-			received = receivePacket();
-			//do the work of relaying to server and relaying the server response
+			//listen for a packet from the client
+			received = receivePacket(recvSock);
+			//do the work of relaying to server and relaying the server response to the client
 			relayPacket(received);
 		}
 	}

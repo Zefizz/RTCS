@@ -6,8 +6,10 @@ public class Server {
 		
 		//ServerHandlerTester test = new ServerHandlerTester();
 		//test.runTests();
-		
+
+		//create the handler. The socket to receive is opened upon construction
 		ServerHandler server = new ServerHandler();
+		
 		server.run();
 	}
 }
