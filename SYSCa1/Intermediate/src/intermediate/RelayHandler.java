@@ -8,11 +8,13 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
+import javax.xml.crypto.Data;
+
 public class RelayHandler {
 	private DatagramSocket recvSock;
 	private DatagramSocket sendRecvSock;
-	private final int recvPort = 8447;
-	private final int serverPort = 8889;
+	private final int recvPort = 23;
+	private final int serverPort = 69;
 	
 	public RelayHandler() {
 		//the sockets are opened during construction
@@ -47,7 +49,8 @@ public class RelayHandler {
 		String data = new String(pack.getData(),0,pack.getLength());
 		System.out.println("got packet from " + pack.getAddress() + ":" + pack.getPort());
 		System.out.println("containing " + pack.getLength() + " bytes of data");;
-		System.out.println("data:\t" + Arrays.toString(data.getBytes()) + "\n");
+		System.out.println("data:\t" + Arrays.toString(data.getBytes()));
+		System.out.println(new String(data.getBytes()) + "\n");
 	}
 	
 	/**
@@ -102,7 +105,8 @@ public class RelayHandler {
 		System.out.println("created datagram packet to: "
 							+ relayPacket.getAddress() + ":" + relayPacket.getPort());
 		System.out.println("containing " + relayPacket.getLength() + " bytes of data");;
-		System.out.println("data:\t" + Arrays.toString(relayPacket.getData()) + "\n");
+		System.out.println("data:\t" + Arrays.toString(relayPacket.getData()));
+		System.out.println(new String(relayPacket.getData()) + "\n");
 
 		return relayPacket;
 		

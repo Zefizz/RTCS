@@ -7,12 +7,12 @@ import java.net.SocketException;
 import java.util.Arrays;
 
 public class ServerHandler {
-	private DatagramSocket dsock;
-	private final int port = 8889;
+	private DatagramSocket recvSock;
+	private final int port = 69;
 	
 	public ServerHandler() {
 		createSocket();
-		System.out.println("server listening on port " + dsock.getLocalPort() +
+		System.out.println("server listening on port " + recvSock.getLocalPort() +
 							"\n++++++++++++++++++++++++++++++++++++++++++++++\n");
 	}
 	/**
@@ -21,7 +21,7 @@ public class ServerHandler {
 	private void createSocket() {
 		try {
 			//create socket on the port for reading/writing
-			dsock = new DatagramSocket(port);
+			recvSock = new DatagramSocket(port);
 		} catch (SocketException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -37,7 +37,8 @@ public class ServerHandler {
 		String data = new String(pack.getData(),0,pack.getLength());
 		System.out.println("got packet from " + pack.getAddress() + ":" + pack.getPort());
 		System.out.println("containing " + pack.getLength() + " bytes of data");
-		System.out.println("data:\t" + Arrays.toString(data.getBytes()) + "\n");
+		System.out.println("data:\t" + Arrays.toString(data.getBytes()));
+		System.out.println(new String(data.getBytes()) + "\n");
 	}
 	
 	/**
@@ -53,7 +54,7 @@ public class ServerHandler {
 		
 		try {
 			//listen on the socket for incoming datagram
-			dsock.receive(pack);
+			recvSock.receive(pack);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -150,7 +151,8 @@ public class ServerHandler {
 		System.out.println("created datagram packet to: "
 							+ response.getAddress() + ":" + response.getPort());
 		System.out.println("containing " + response.getLength() + " bytes of data");;
-		System.out.println("data:\t" + Arrays.toString(response.getData()) + "\n");
+		System.out.println("data:\t" + Arrays.toString(response.getData()));
+		System.out.println(new String(response.getData()) + "\n");
 		
 		//create new socket to send back the response
 		DatagramSocket replySock = null;
