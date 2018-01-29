@@ -7,7 +7,7 @@ import java.net.SocketException;
 import java.util.Arrays;
 import java.io.IOException;
 
-public class PacketHandler {
+public class PacketHandler implements Runnable {
 	private DatagramSocket sendRecvSock;
 	private final int sendPort = 23;
 	
@@ -95,11 +95,7 @@ public class PacketHandler {
 				sendRecvSock.send(sendPacket.createDatagram(InetAddress.getLocalHost(),sendPort));
 				receivePacket();
 			}
-			//send invalid request
-			sendPacket = new ReadPacket("asdf.dat","tetco");
-			sendPacket.invalidate();
-			sendRecvSock.send(sendPacket.createDatagram(InetAddress.getLocalHost(),sendPort));
-			
+
 		} catch (IOException e) {
 			//IOExection occurred, likely a timeout
 			System.out.println(e);

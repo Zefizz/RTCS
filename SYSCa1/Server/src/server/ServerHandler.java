@@ -6,13 +6,14 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.Arrays;
 
-public class ServerHandler {
-	private DatagramSocket recvSock;
-	private final int port = 69;
+public class ServerHandler implements Runnable {
+	private DatagramSocket sock;
+	private DatagramPacket received;
 	
-	public ServerHandler() {
+	public ServerHandler(DatagramPacket pack) {
 		createSocket();
-		System.out.println("server listening on port " + recvSock.getLocalPort() +
+		this.received = pack;
+		System.out.println("handler running on port " + sock.getLocalPort() +
 							"\n++++++++++++++++++++++++++++++++++++++++++++++\n");
 	}
 	/**
@@ -21,7 +22,7 @@ public class ServerHandler {
 	private void createSocket() {
 		try {
 			//create socket on the port for reading/writing
-			recvSock = new DatagramSocket(port);
+			sock = new DatagramSocket();
 		} catch (SocketException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -54,7 +55,7 @@ public class ServerHandler {
 		
 		try {
 			//listen on the socket for incoming datagram
-			recvSock.receive(pack);
+			sock.receive(pack);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -150,7 +151,7 @@ public class ServerHandler {
 		//print out the information about the new packet
 		System.out.println("created datagram packet to: "
 							+ response.getAddress() + ":" + response.getPort());
-		System.out.println("containing " + response.getLength() + " bytes of data");;
+		System.out.println("containing " + response.getLength() + " bytes of data");
 		System.out.println("data:\t" + Arrays.toString(response.getData()));
 		System.out.println(new String(response.getData()) + "\n");
 		
@@ -176,12 +177,6 @@ public class ServerHandler {
 	}
 	
 	public void run() {
-		DatagramPacket received;
-		
-		//repeat *forever*
-		while (true) {
-			received = receivePacket();
-			respondTo(received);
-		}
+		respondTo(received);
 	}
 }

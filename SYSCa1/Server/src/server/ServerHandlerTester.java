@@ -1,6 +1,10 @@
 package server;
 
 public class ServerHandlerTester extends ServerHandler {
+	
+	public ServerHandlerTester() {
+		super(null);
+	}
 
 	//test the validatePacketData()
 	public void runTests() { 
