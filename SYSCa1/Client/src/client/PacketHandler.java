@@ -7,16 +7,16 @@ import java.net.SocketException;
 import java.util.Arrays;
 import java.io.IOException;
 
-public class PacketHandler {
-	private DatagramSocket dsock;
-	private final int sendPort = 8447;
+public class PacketHandler implements Runnable {
+	private DatagramSocket sendRecvSock;
+	private final int sendPort = 23;
 	
 	/**
 	 * the socket is opened during construction
 	 */
 	public PacketHandler() {
 		createSocket();
-		System.out.println("client running on port " + dsock.getLocalPort() + 
+		System.out.println("client running on port " + sendRecvSock.getLocalPort() + 
 							"\n++++++++++++++++++++++++++++++++++++++++++++++\n");
 	}
 	
@@ -26,9 +26,9 @@ public class PacketHandler {
 	private void createSocket() {
 		try {
 			//create socket on unspecified port for reading/writing
-			dsock = new DatagramSocket();
+			sendRecvSock = new DatagramSocket();
 			//timeout after 10 seconds
-			dsock.setSoTimeout(10000);
+			sendRecvSock.setSoTimeout(10000);
 		} catch (SocketException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -44,7 +44,8 @@ public class PacketHandler {
 		String data = new String(pack.getData(),0,pack.getLength());
 		System.out.println("got packet from " + pack.getAddress() + ":" + pack.getPort());
 		System.out.println("containing " + pack.getLength() + " bytes of data");
-		System.out.println("data:\t" + Arrays.toString(data.getBytes()) + "\n");
+		System.out.println("data:\t" + Arrays.toString(data.getBytes()));
+		System.out.println(new String(data.getBytes()) + "\n");
 	}
 
 	/**
@@ -59,7 +60,7 @@ public class PacketHandler {
 		
 		try {
 			//listen on the socket for incoming datagram
-			dsock.receive(pack);
+			sendRecvSock.receive(pack);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -85,20 +86,16 @@ public class PacketHandler {
 				//create the datagram packet. the data is printed when created
 				sendPacket = new WritePacket("backup.sql","nEtAsCiI");
 				//send the packet to the intermediate host on the well-known port
-				dsock.send(sendPacket.createDatagram(InetAddress.getLocalHost(),sendPort));
+				sendRecvSock.send(sendPacket.createDatagram(InetAddress.getLocalHost(),sendPort));
 				//wait on datagram socket for incoming packet and print the info received
 				receivePacket();
 				
 				//same as above, but sends a read request
 				sendPacket = new ReadPacket("banlist.txt","octet");
-				dsock.send(sendPacket.createDatagram(InetAddress.getLocalHost(),sendPort));
+				sendRecvSock.send(sendPacket.createDatagram(InetAddress.getLocalHost(),sendPort));
 				receivePacket();
 			}
-			//send invalid request
-			sendPacket = new ReadPacket("asdf.dat","tetco");
-			sendPacket.invalidate();
-			dsock.send(sendPacket.createDatagram(InetAddress.getLocalHost(),sendPort));
-			
+
 		} catch (IOException e) {
 			//IOExection occurred, likely a timeout
 			System.out.println(e);
@@ -106,6 +103,6 @@ public class PacketHandler {
 		}
 		
 		//close the socket when run is competed
-		dsock.close();
+		sendRecvSock.close();
 	}
 }

@@ -1,6 +1,10 @@
 package server;
 
 public class ServerHandlerTester extends ServerHandler {
+	
+	public ServerHandlerTester() {
+		super(null);
+	}
 
 	//test the validatePacketData()
 	public void runTests() { 
@@ -18,6 +22,7 @@ public class ServerHandlerTester extends ServerHandler {
 		byte[] data9 = {0,1,32};				//end after filename
 		byte[] data10 = {0,1,32,0,6};			//end after mode
 		byte[] data11 = {0, 1, 97, 115, 100, 102, 46, 100, 97, 116, 0, 49, 50, 51, 52, 1};	//no terminating 0
+		byte[] data12 = {1,2,0,54,0,0,0};		//there is more stuff after the end
 
 		assert validatePacketData(dataa,dataa.length) == true;
 		assert validatePacketData(data0,data0.length) == true;
@@ -32,6 +37,7 @@ public class ServerHandlerTester extends ServerHandler {
 		assert validatePacketData(data9,data9.length) == false;
 		assert validatePacketData(data10,data10.length) == false;
 		assert validatePacketData(data11,data11.length) == false;
+		assert validatePacketData(data12,data12.length) == false;
 		
 		System.out.println("all tests completed");
 	}
