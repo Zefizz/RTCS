@@ -1,31 +1,34 @@
 package pbjt;
 
+import java.util.Random;
+
 public class Table {
 
   private Ingredient ingredient1 = Ingredient.NONE;
   private Ingredient ingredient2 = Ingredient.NONE;
-  private boolean running = true;
+  private static Random random   = new Random();
+  private boolean running        = true;
 
   /**
    * the agent places two random ingredients on the table
    * and notifies the other chefs
    */
   public synchronized void supplyIngredients() {
-	  //System.out.println("supplying");
-	  
 	  //wait for the table to be cleared
 	  try {
-		  while(ingredient1 != Ingredient.NONE && ingredient2 != Ingredient.NONE) {
-			  //System.out.println("agent waits");
-			  wait();
+		  while (ingredient1 != Ingredient.NONE && ingredient2 != Ingredient.NONE) {
+		  	  if (!running) {
+			 	   return;
+		  	  } else {
+				    wait();
+		 	  }
 		  }
 	  } catch (InterruptedException e) {
 		  System.exit(1);
 	  }
 	  
-	  //TODO randomize
-	  ingredient1 = Ingredient.PENUT_BUTTER;
-	  ingredient2 = Ingredient.JELLY;
+	  ingredient1 = randomIngredient();
+	  ingredient2 = randomIngredient();
 	  
 	  //wake the sleeping chefs
 	  notifyAll();
@@ -37,15 +40,15 @@ public class Table {
    * @param ingredient3
    */
   public synchronized void makeSandwich(Ingredient ingredient3) {
-
-	  //System.out.println("making");
-	  
 	  //wait if there are not the required ingredients
 	  try {
-		  while(ingredient1 == Ingredient.NONE || ingredient2 == Ingredient.NONE ||
+		  while (ingredient1 == Ingredient.NONE || ingredient2 == Ingredient.NONE ||
 				ingredient1 == ingredient3 || ingredient2 == ingredient3) {
-			  //System.out.println("chef waits");
-			  wait();
+		  	  if (!running) {
+			 	   return;
+		  	  } else {
+				    wait();
+		 	  }
 		  }
 	  } catch (InterruptedException e) {
 		  System.exit(1);
@@ -75,7 +78,19 @@ public class Table {
 	  return running;
   }
 
-  private synchronized void eat() {
+  /**
+   * @return a random ingredient
+   */
+  private Ingredient randomIngredient() {
+  	  int next = random.nextInt();
+	  switch (next%3) {
+		  case 0: return Ingredient.BREAD;
+		  case 1: return Ingredient.PENUT_BUTTER;
+		  case 2: default: return Ingredient.JELLY;
+	  }
+  }
+
+  private void eat() {
 	  System.out.println("nom nom, chef " + Thread.currentThread().getId() + " ate the sandwich.");
   }
 
