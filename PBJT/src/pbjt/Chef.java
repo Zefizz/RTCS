@@ -1,3 +1,4 @@
+package pbjt;
 
 public class Chef implements Runnable {
   
@@ -10,6 +11,9 @@ public class Chef implements Runnable {
   }
 
   public void run() {
+	  while(table.running()) {
+		  table.makeSandwich(ingredient);
+	  }
   }
 
 }

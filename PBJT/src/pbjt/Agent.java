@@ -1,3 +1,4 @@
+package pbjt;
 
 public class Agent implements Runnable {
 
@@ -8,6 +9,10 @@ public class Agent implements Runnable {
   }
 
   public void run() {
+	  for (int i=0; i<2000000; ++i) {
+		  table.supplyIngredients();
+	  }
+	  table.stop();
   }
 }
 
